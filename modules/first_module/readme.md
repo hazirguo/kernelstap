@@ -15,3 +15,8 @@
 3. 编译之后插入/移除模块
 
 
+## 参考资料 ##
+
+1. http://www.linuxchix.org/content/courses/kernel_hacking/lesson8
+2. http://www.thegeekstuff.com/2013/07/write-linux-kernel-module/
+3. http://www.tldp.org/LDP/lkmpg/2.6/html/x121.html
