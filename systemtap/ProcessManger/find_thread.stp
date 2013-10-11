@@ -1,0 +1,36 @@
+%{
+#include <linux/list.h>
+#include <linux/sched.h>
+#include <linux/types.h>
+%}
+
+probe begin
+{
+    printf("%s \n", find_threads_by_pid($1))
+    exit()
+}
+
+
+function find_threads_by_pid:string(pid:long) 
+%{
+    struct task_struct *ts;      //指向线程组的task_struct
+    struct task_struct *tts;     //线程的task_struct
+    struct pid *p;
+
+    //1.根据线程组的PID找到线程组的task_struct
+    //1.1 根据 PID 找到 pid 结构
+    p = find_get_pid((pid_t)STAP_ARG_pid);
+    //1.2 根据 PID 类型找到 ts
+    ts = get_pid_task(p, PIDTYPE_PID);
+ 
+    if(ts==NULL) {
+        sprintf(STAP_RETVALUE, "no task #%d", (int)STAP_ARG_pid);
+        return;
+    }
+
+    snprintf(STAP_RETVALUE, MAXSTRINGLEN, "%s(%d)", ts->comm, ts->pid);
+
+    //2.遍历线程组的task_struct->thread_group 找到所有的线程
+    list_for_each_entry(tts, &(ts->thread_group), thread_group)
+        printk("   thread %s(#%d)\n", tts->comm, tts->pid);
+%}

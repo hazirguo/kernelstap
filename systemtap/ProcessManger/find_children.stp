@@ -1,0 +1,35 @@
+%{
+#include <linux/sched.h>
+#include <linux/list.h>
+#include <linux/types.h>
+%}
+
+
+probe begin
+{
+    if (find_pid_child($1) == 0)
+        printf("error!\n");
+    exit()
+
+}
+
+//根据父进程的PID找到其所有的子进程
+function find_pid_child:long (nr:long) %{
+    
+    struct task_struct *pts;    //parent task_struct
+    struct pid *pid;            //parent pid
+    struct task_struct *cts;    //children task_struct
+
+    //1. 找到父进程的task_struct
+    pid = find_get_pid((pid_t)STAP_ARG_nr);
+    if (pid != NULL)
+        pts = get_pid_task(pid, PIDTYPE_PID);
+    else
+        STAP_RETVALUE = 0;
+
+    //2. 根据ts->children 找到所有的子进程
+    list_for_each_entry(cts, &(pts->children), sibling)
+        printk("   children %s(%d)\n", cts->comm, cts->pid);
+
+    STAP_RETVALUE = 1;
+%}
