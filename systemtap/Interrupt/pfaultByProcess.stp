@@ -1,0 +1,16 @@
+global numFaults
+
+probe vm.pagefault
+{
+	numFaults[execname()] += 1
+}
+
+probe timer.s(5)
+{
+	printf("%16s\t%10s\t\n", "Process", "Num pagefaults")
+	foreach(name in numFaults-)
+	{
+		printf("%16s\t%10d\t\n", name, numFaults[name])
+	}
+	exit()
+}
